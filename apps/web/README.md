@@ -10,6 +10,6 @@ Next.js + TypeScript 기반 프론트엔드
 
 ## 시작하기
 ```bash
-pnpm install
-pnpm dev
+bun install
+bun dev
 ```

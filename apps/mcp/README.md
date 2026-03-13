@@ -9,6 +9,6 @@ Cursor / Claude에서 Grovarc 데이터를 직접 조회할 수 있습니다.
 
 ## 시작하기
 ```bash
-pnpm install
-pnpm dev
+bun install
+bun dev
 ```
