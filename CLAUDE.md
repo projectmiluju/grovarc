@@ -138,7 +138,7 @@
 
 ```
 현재 Phase: 0 (진행 중)
-마지막 작업: PRD 작성 완료, GitHub 레포 모노레포 구조 세팅 완료
+마지막 작업: commitlint + husky 커밋 컨벤션 설정 완료 (bun 패키지 매니저 도입)
 다음 할 일: 유저 플로우 설계, DB 스키마 초안, API 명세 초안, Kotlin 문법 훑기
 블로커: -
 ```
@@ -169,6 +169,11 @@
 - **이유**: MCP를 쓰는 것이 아니라 MCP 서버 제공자가 되는 것이 포트폴리오 차별점
 - **트레이드오프**: 추가 개발 공수
 
+### ADR-005 | 패키지 매니저 → bun
+- **결정**: 루트 패키지 매니저를 bun으로 채택
+- **이유**: npm/pnpm 대비 설치 속도 빠름, 런타임 내장, 모노레포 워크스페이스 지원
+- **트레이드오프**: 생태계가 npm/pnpm보다 덜 성숙, 일부 패키지 호환 이슈 가능성
+
 > ✅ 새로운 기술 결정이 생길 때마다 여기에 추가하세요.
 
 ---
@@ -177,7 +182,8 @@
 
 ### 공통
 - 브랜치 전략: `main` / `develop` / `feature/이슈번호-설명`
-- 커밋 컨벤션: Conventional Commits (`feat:`, `fix:`, `docs:`, `test:`, `chore:`)
+- 커밋 컨벤션: Conventional Commits (`feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`, `perf:`, `ci:`, `revert:`)
+- 커밋 메시지 검사: commitlint + husky (`commit-msg` 훅) — 형식 불일치 시 커밋 차단
 - PR: 이슈 연결 필수, 셀프 리뷰 후 머지
 
 ### Kotlin
