@@ -4,6 +4,9 @@ on:
   pull_request:
     branches: [develop, main]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   # ── commitlint ─────────────────────────────────────────────────────────────
   commitlint:
@@ -140,15 +143,23 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        app: [web, api, ai, mcp]
+        include:
+          - app: web
+            sentinel: package.json
+          - app: api
+            sentinel: build.gradle.kts
+          - app: ai
+            sentinel: requirements.txt
+          - app: mcp
+            sentinel: package.json
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check if Dockerfile exists
+      - name: Check if app source exists
         id: check
         run: |
-          if [ -f "apps/${{ matrix.app }}/Dockerfile" ]; then
+          if [ -f "apps/${{ matrix.app }}/${{ matrix.sentinel }}" ]; then
             echo "exists=true" >> $GITHUB_OUTPUT
           else
             echo "exists=false" >> $GITHUB_OUTPUT
@@ -160,9 +171,13 @@ jobs:
 
       - name: Build Docker image
         if: steps.check.outputs.exists == 'true'
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: apps/${{ matrix.app }}
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Skip (no source yet)
+        if: steps.check.outputs.exists == 'false'
+        run: echo "apps/${{ matrix.app }} 소스 없음 — 스킵"
