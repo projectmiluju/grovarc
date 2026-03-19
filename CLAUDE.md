@@ -137,13 +137,17 @@
 ## 현재 진행 상황
 
 ```
-현재 Phase: 0 (완료 → Phase 1 준비)
-마지막 작업: Phase 0 설계 산출물 완성
-  - docs/user-flow.md     — 유저 플로우 설계 (온보딩/일상루프/주간회고/코칭/MCP)
-  - docs/db-schema.md     — DB 스키마 초안 (PostgreSQL + pgvector + MongoDB + Redis)
-  - docs/api-spec.md      — REST API 명세 초안 (인증/로그/회고/코칭/대시보드)
-  - docs/kotlin-quickstart.md — Kotlin 문법 퀵스타트 (Java 비교 기준)
-다음 할 일: Phase 1 — 인프라 & 환경 세팅 (Terraform, k8s, Docker, CI/CD)
+현재 Phase: 1 (진행 중 — #13 Prometheus + Grafana만 남음)
+마지막 작업: Phase 1 인프라 세팅 진행 중
+  완료:
+  - #8  apps/{web,api,ai,mcp}/Dockerfile — 멀티 스테이지 빌드
+  - #9  docker-compose.yml — 로컬 개발 환경 (PostgreSQL, Redis, MongoDB, Kafka)
+  - #10 .github/workflows/ci.yml — GitHub Actions CI (commitlint, 빌드, Docker 검증)
+  - #11 infra/terraform/ — AWS 인프라 코드 (VPC, EKS, RDS, Redis, Kafka, MongoDB, S3)
+  - #12 infra/k8s/ — Kubernetes 매니페스트 (Deployment, Service, Ingress, HPA)
+  진행 중:
+  - #13 Prometheus + Grafana 모니터링 설정 (PR #18 머지 후 시작)
+다음 할 일: #13 완료 후 → Phase 2 백엔드 코어 (Kotlin Spring Boot)
 블로커: -
 ```
 
