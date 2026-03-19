@@ -137,17 +137,15 @@
 ## 현재 진행 상황
 
 ```
-현재 Phase: 1 (진행 중 — #13 Prometheus + Grafana만 남음)
-마지막 작업: Phase 1 인프라 세팅 진행 중
-  완료:
+현재 Phase: 1 (완료) → Phase 2 시작
+마지막 작업: Phase 1 인프라 & 환경 세팅 전체 완료
   - #8  apps/{web,api,ai,mcp}/Dockerfile — 멀티 스테이지 빌드
   - #9  docker-compose.yml — 로컬 개발 환경 (PostgreSQL, Redis, MongoDB, Kafka)
-  - #10 .github/workflows/ci.yml — GitHub Actions CI (commitlint, 빌드, Docker 검증)
+  - #10 .github/workflows/ci.yml — GitHub Actions CI
   - #11 infra/terraform/ — AWS 인프라 코드 (VPC, EKS, RDS, Redis, Kafka, MongoDB, S3)
   - #12 infra/k8s/ — Kubernetes 매니페스트 (Deployment, Service, Ingress, HPA)
-  진행 중:
-  - #13 Prometheus + Grafana 모니터링 설정 (PR #18 머지 후 시작)
-다음 할 일: #13 완료 후 → Phase 2 백엔드 코어 (Kotlin Spring Boot)
+  - #13 infra/monitoring/ — Prometheus + Grafana 모니터링
+다음 할 일: Phase 2 — 백엔드 코어 (Kotlin Spring Boot, CRUD API, JUnit, Kafka)
 블로커: -
 ```
 
