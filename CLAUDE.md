@@ -137,9 +137,13 @@
 ## 현재 진행 상황
 
 ```
-현재 Phase: 0 (진행 중)
-마지막 작업: commitlint + husky 커밋 컨벤션 설정 완료 (bun 패키지 매니저 도입)
-다음 할 일: 유저 플로우 설계, DB 스키마 초안, API 명세 초안, Kotlin 문법 훑기
+현재 Phase: 0 (완료 → Phase 1 준비)
+마지막 작업: Phase 0 설계 산출물 완성
+  - docs/user-flow.md     — 유저 플로우 설계 (온보딩/일상루프/주간회고/코칭/MCP)
+  - docs/db-schema.md     — DB 스키마 초안 (PostgreSQL + pgvector + MongoDB + Redis)
+  - docs/api-spec.md      — REST API 명세 초안 (인증/로그/회고/코칭/대시보드)
+  - docs/kotlin-quickstart.md — Kotlin 문법 퀵스타트 (Java 비교 기준)
+다음 할 일: Phase 1 — 인프라 & 환경 세팅 (Terraform, k8s, Docker, CI/CD)
 블로커: -
 ```
 
