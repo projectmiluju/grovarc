@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-config
+  namespace: grovarc
+data:
+  APP_ENV: "prod"
+  PORT: "8000"
+  KAFKA_BOOTSTRAP_SERVERS: "kafka-service:9092"
