@@ -1,0 +1,59 @@
+# Helm으로 배포 — 아래는 values 오버라이드 파일입니다.
+# 배포 명령:
+#   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+#   helm upgrade --install kube-prometheus-stack \
+#     prometheus-community/kube-prometheus-stack \
+#     -n monitoring --create-namespace \
+#     -f infra/k8s/monitoring/kube-prometheus-stack.yaml
+
+prometheus:
+  prometheusSpec:
+    retention: 15d
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: gp3
+          resources:
+            requests:
+              storage: 20Gi
+    additionalScrapeConfigs:
+      - job_name: grovarc-api
+        metrics_path: /actuator/prometheus
+        static_configs:
+          - targets: ["api-service.grovarc.svc.cluster.local:8080"]
+      - job_name: grovarc-ai
+        metrics_path: /metrics
+        static_configs:
+          - targets: ["ai-service.grovarc.svc.cluster.local:8000"]
+
+grafana:
+  adminPassword: "change-me-on-install"
+  persistence:
+    enabled: true
+    size: 5Gi
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: grovarc
+          folder: Grovarc
+          type: file
+          options:
+            path: /var/lib/grafana/dashboards/grovarc
+  dashboardsConfigMaps:
+    grovarc: "grovarc-dashboards"
+  ingress:
+    enabled: true
+    ingressClassName: alb
+    hosts:
+      - grafana.grovarc.dev
+
+alertmanager:
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: gp3
+          resources:
+            requests:
+              storage: 2Gi
