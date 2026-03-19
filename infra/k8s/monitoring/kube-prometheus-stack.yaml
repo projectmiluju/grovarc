@@ -44,8 +44,7 @@ grafana:
     grovarc: "grovarc-dashboards"
   ingress:
     enabled: true
-    annotations:
-      kubernetes.io/ingress.class: alb
+    ingressClassName: alb
     hosts:
       - grafana.grovarc.dev
 
