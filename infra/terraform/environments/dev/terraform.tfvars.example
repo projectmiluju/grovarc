@@ -1,0 +1,7 @@
+aws_region     = "ap-northeast-2"
+project        = "grovarc"
+environment    = "dev"
+db_username    = "grovarc"
+db_password    = "your-secure-password"
+mongo_username = "grovarc"
+mongo_password = "your-secure-password"
