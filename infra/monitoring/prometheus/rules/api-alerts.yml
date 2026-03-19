@@ -1,0 +1,34 @@
+groups:
+  - name: grovarc-api
+    rules:
+      - alert: APIHighErrorRate
+        expr: |
+          sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m]))
+          /
+          sum(rate(http_server_requests_seconds_count[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API 5xx 에러율 5% 초과"
+          description: "{{ $value | humanizePercentage }} 에러율 발생 중"
+
+      - alert: APIHighLatency
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_server_requests_seconds_bucket[5m])) by (le)
+          ) > 1.0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API p95 응답시간 1초 초과"
+          description: "p95 응답시간: {{ $value }}s"
+
+      - alert: APIPodDown
+        expr: kube_deployment_status_replicas_available{deployment="api"} < 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API Pod 가용 인스턴스 없음"
