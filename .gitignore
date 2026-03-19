@@ -144,4 +144,4 @@ coverage/
 *.orig
 .turbo
 
-# docs/devlog 개발일지는 커밋 포함
+docs/devlog
