@@ -1,0 +1,168 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+
+jobs:
+  # ── commitlint ─────────────────────────────────────────────────────────────
+  commitlint:
+    name: Commit Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run commitlint
+        run: bunx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }}
+
+  # ── api (Kotlin Spring Boot) ────────────────────────────────────────────────
+  api-build:
+    name: API Build & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check if api source exists
+        id: check
+        run: |
+          if [ -f "build.gradle.kts" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: actions/setup-java@v4
+        if: steps.check.outputs.exists == 'true'
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Build
+        if: steps.check.outputs.exists == 'true'
+        run: ./gradlew build --no-daemon
+
+      - name: Test
+        if: steps.check.outputs.exists == 'true'
+        run: ./gradlew test --no-daemon
+
+      - name: Skip (no source yet)
+        if: steps.check.outputs.exists == 'false'
+        run: echo "apps/api 소스 없음 — 스킵"
+
+  # ── ai (Python FastAPI) ─────────────────────────────────────────────────────
+  ai-build:
+    name: AI Build & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/ai
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check if ai source exists
+        id: check
+        run: |
+          if [ -f "requirements.txt" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.check.outputs.exists == 'true'
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        if: steps.check.outputs.exists == 'true'
+        run: pip install uv
+
+      - name: Install dependencies
+        if: steps.check.outputs.exists == 'true'
+        run: uv pip install --system -r requirements.txt
+
+      - name: Test
+        if: steps.check.outputs.exists == 'true'
+        run: pytest --tb=short
+
+      - name: Skip (no source yet)
+        if: steps.check.outputs.exists == 'false'
+        run: echo "apps/ai 소스 없음 — 스킵"
+
+  # ── web (Next.js) ───────────────────────────────────────────────────────────
+  web-build:
+    name: Web Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check if web source exists
+        id: check
+        run: |
+          if [ -f "package.json" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: oven-sh/setup-bun@v2
+        if: steps.check.outputs.exists == 'true'
+
+      - name: Install dependencies
+        if: steps.check.outputs.exists == 'true'
+        run: bun install
+
+      - name: Build
+        if: steps.check.outputs.exists == 'true'
+        run: bun run build
+
+      - name: Skip (no source yet)
+        if: steps.check.outputs.exists == 'false'
+        run: echo "apps/web 소스 없음 — 스킵"
+
+  # ── docker build 검증 ───────────────────────────────────────────────────────
+  docker-build:
+    name: Docker Build (${{ matrix.app }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [web, api, ai, mcp]
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check if Dockerfile exists
+        id: check
+        run: |
+          if [ -f "apps/${{ matrix.app }}/Dockerfile" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Docker Buildx
+        if: steps.check.outputs.exists == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        if: steps.check.outputs.exists == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: apps/${{ matrix.app }}
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
