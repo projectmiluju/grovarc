@@ -182,6 +182,74 @@
 
 ---
 
+## GitHub 이슈 & 프로젝트 관리
+
+### 이슈 구조
+- **에픽**: Phase 단위 묶음 이슈 (`[Epic] Phase N — 설명`), 레이블: `epic`, `phase-N`, 영역
+- **태스크**: 실제 작업 단위 이슈 (`[Task] 작업명`), 레이블: `task`, `phase-N`, 영역
+- 에픽은 이미 Phase 0~6 생성 완료. 새 에픽은 원칙적으로 추가 없음
+- 태스크는 해당 Phase 시작 시 에픽 하위에 추가
+
+### 태스크 이슈 생성 절차 (신규 태스크 추가 시)
+
+1. **이슈 생성**
+```bash
+gh issue create \
+  --title "[Task] 작업명" \
+  --body "## 상위 에픽\n#에픽번호\n\n## 작업 내용\n- [ ] 항목\n\n## 브랜치\n\`feature/이슈번호-설명\`" \
+  --label "task,phase-N,영역" \
+  --repo projectmiluju/grovarc
+```
+
+2. **Sub-issue 연결** (이슈 ID 필요 — 번호 아님)
+```bash
+# 이슈 ID 조회
+gh api /repos/projectmiluju/grovarc/issues/이슈번호 --jq '.id'
+
+# 에픽에 sub-issue 연결
+gh api --method POST \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  /repos/projectmiluju/grovarc/issues/에픽번호/sub_issues \
+  --input - <<< '{"sub_issue_id": 이슈ID}'
+```
+
+3. **GitHub Project 추가 & 날짜 설정**
+```bash
+# Project에 추가
+gh project item-add 14 --owner projectmiluju --url https://github.com/projectmiluju/grovarc/issues/이슈번호
+
+# Start/Target Date 설정 (field ID는 고정)
+# Start Date field: PVTF_lAHOBni4vc4BSOUbzg_0mcU
+# Target Date field: PVTF_lAHOBni4vc4BSOUbzg_0mcY
+gh project item-edit --project-id PVT_kwHOBni4vc4BSOUb --id ITEM_ID \
+  --field-id PVTF_lAHOBni4vc4BSOUbzg_0mcU --date YYYY-MM-DD
+```
+
+4. **브랜치 생성**
+```bash
+git checkout develop
+git checkout -b feature/이슈번호-설명
+```
+
+### 레이블 목록
+| 레이블 | 용도 |
+|--------|------|
+| `epic` | 에픽 이슈 |
+| `task` | 태스크 이슈 |
+| `phase-0` ~ `phase-6` | 페이즈 구분 |
+| `infra` | 인프라 |
+| `backend` | 백엔드 (Kotlin) |
+| `frontend` | 프론트엔드 (Next.js) |
+| `ai` | AI 서버 (Python) |
+| `mcp` | MCP 서버 |
+
+### GitHub Project
+- **프로젝트**: Grovarc 개발 로드맵 (Project #14)
+- **URL**: https://github.com/users/projectmiluju/projects/14
+- **Project ID**: PVT_kwHOBni4vc4BSOUb
+
+---
+
 ## 코드 컨벤션
 
 ### 공통
