@@ -47,7 +47,9 @@ build/
 *.class
 .gradle/
 gradle/
-!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/
+!apps/api/gradle/
+apps/api/build/
 out/
 target/
 *.ipr
