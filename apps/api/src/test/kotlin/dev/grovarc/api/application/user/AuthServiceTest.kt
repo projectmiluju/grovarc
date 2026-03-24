@@ -59,9 +59,6 @@ class AuthServiceTest {
         )
         whenever(userRepository.existsByEmail(request.email)).thenReturn(false)
         whenever(userRepository.save(any())).thenReturn(savedUser)
-        whenever(refreshTokenRepository.save(any())).thenReturn(
-            RefreshToken(user = savedUser, token = "token", expiresAt = LocalDateTime.now().plusDays(7))
-        )
 
         val response = authService.signup(request)
 
