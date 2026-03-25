@@ -137,15 +137,12 @@
 ## 현재 진행 상황
 
 ```
-현재 Phase: 1 (완료) → Phase 2 시작
-마지막 작업: Phase 1 인프라 & 환경 세팅 전체 완료
-  - #8  apps/{web,api,ai,mcp}/Dockerfile — 멀티 스테이지 빌드
-  - #9  docker-compose.yml — 로컬 개발 환경 (PostgreSQL, Redis, MongoDB, Kafka)
-  - #10 .github/workflows/ci.yml — GitHub Actions CI
-  - #11 infra/terraform/ — AWS 인프라 코드 (VPC, EKS, RDS, Redis, Kafka, MongoDB, S3)
-  - #12 infra/k8s/ — Kubernetes 매니페스트 (Deployment, Service, Ingress, HPA)
-  - #13 infra/monitoring/ — Prometheus + Grafana 모니터링
-다음 할 일: Phase 2 — 백엔드 코어 (Kotlin Spring Boot, CRUD API, JUnit, Kafka)
+현재 Phase: 2 (진행 중)
+마지막 작업: #23 태그 API (PR #29)
+  - TagService: 목록 조회 / 생성 (중복 검사) / 삭제
+  - TagController: GET /POST /DELETE /api/v1/tags
+  - JUnit: TagServiceTest (5케이스)
+다음 할 일: #24 회고 API
 블로커: -
 ```
 
