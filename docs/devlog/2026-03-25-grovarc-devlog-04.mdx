@@ -1,0 +1,192 @@
+---
+title: "Grovarc 개발기 #4 — Phase 2 백엔드 코어: Kotlin Spring Boot API 전체 구현"
+date: 2026-03-25
+summary: "Gradle 세팅부터 JWT 인증, 작업 로그 CRUD, 태그, 회고, 대시보드(스트릭+Redis 캐싱)까지. Phase 2 백엔드 이슈 6개를 하루에 완료했다."
+tags: ["Grovarc", "Kotlin", "SpringBoot", "JWT", "Kafka", "Redis", "Phase2"]
+category: "til"
+series: "Grovarc 개발기"
+---
+
+# Grovarc 개발기 #4 — Phase 2 백엔드 코어: Kotlin Spring Boot API 전체 구현
+
+Phase 1에서 인프라 뼈대를 잡았다면, Phase 2는 실제 서비스 로직을 만드는 단계다. Kotlin + Spring Boot 프로젝트 세팅부터 시작해서 유저 인증(JWT), 작업 로그 CRUD + Kafka 이벤트 발행, 태그, 회고, 대시보드까지 6개 이슈를 완료했다.
+
+---
+
+## 목표
+
+- Kotlin Spring Boot 프로젝트 초기화 및 패키지 구조 설계
+- JWT 기반 유저 인증 API (회원가입 / 로그인 / 토큰 재발급)
+- 작업 로그 CRUD + Kafka 이벤트 발행
+- 태그 API, 회고 API
+- 대시보드 API (스트릭 계산 + Redis 캐싱)
+
+---
+
+## 핵심 구현 포인트
+
+### 1) 패키지 구조 — Layered Architecture
+
+단순 MVC 대신 레이어를 명확히 분리했다. AI 서버와 MCP 서버가 추가될 예정이라 도메인 로직이 인프라에 의존하지 않도록 경계를 두는 게 중요했다.
+
+```
+dev.grovarc.api
+├── domain/          # 엔티티, 레포지터리 인터페이스 (순수 도메인)
+│   ├── user/
+│   ├── worklog/
+│   ├── tag/
+│   └── retrospective/
+├── application/     # 유스케이스, 서비스 (비즈니스 로직)
+├── infrastructure/  # JPA 구현체, Kafka, Security, Cache
+└── interfaces/      # REST 컨트롤러, DTO
+```
+
+### 2) JWT 인증 — jjwt 0.12.x 방식
+
+jjwt API가 0.12 버전부터 크게 바뀌었다. 기존 `Jwts.parser().setSigningKey()` 대신 `Jwts.parser().verifyWith()` 방식을 사용한다.
+
+```kotlin
+// JwtProvider.kt
+fun generateAccessToken(userId: UUID, email: String): String {
+    val now = Date()
+    return Jwts.builder()
+        .subject(userId.toString())
+        .claim("email", email)
+        .issuedAt(now)
+        .expiration(Date(now.time + props.expirationMs))
+        .signWith(key)
+        .compact()
+}
+
+fun validateToken(token: String): Boolean {
+    return try {
+        Jwts.parser().verifyWith(key).build().parseSignedClaims(token)
+        true
+    } catch (e: JwtException) { false }
+}
+```
+
+`JwtAuthenticationFilter`는 `OncePerRequestFilter`를 상속해서 요청마다 한 번만 실행되도록 보장했다. Bearer 토큰을 파싱해 `SecurityContextHolder`에 `UsernamePasswordAuthenticationToken`을 주입한다. principal에 userId(UUID)를 넣어서 컨트롤러에서 `@AuthenticationPrincipal UUID userId`로 바로 꺼낼 수 있게 했다.
+
+### 3) Refresh Token 교체 전략
+
+로그인/재발급 시 기존 Refresh Token을 모두 삭제하고 새로 발급하는 **Token Rotation** 방식을 적용했다. 탈취된 토큰으로 재발급이 들어오면 해당 유저의 모든 세션이 만료된다.
+
+```kotlin
+private fun issueTokens(user: User): TokenResponse {
+    refreshTokenRepository.deleteByUser(user)  // 기존 토큰 전부 삭제
+
+    val accessToken = jwtProvider.generateAccessToken(user.id!!, user.email)
+    val rawRefreshToken = jwtProvider.generateRefreshToken()  // UUID
+
+    refreshTokenRepository.save(RefreshToken(...))
+    return TokenResponse(accessToken, rawRefreshToken)
+}
+```
+
+### 4) 작업 로그 CRUD + Kafka 이벤트 발행
+
+로그 저장 시 AI 서버에 비동기 알림을 보내야 한다. AI 서버가 패턴 분석을 하려면 새 로그가 저장됐다는 이벤트를 받아야 하기 때문이다.
+
+```kotlin
+// WorkLogEventPublisher.kt
+fun publishWorkLogSaved(workLogId: UUID, userId: UUID, logDate: LocalDate) {
+    val payload = objectMapper.writeValueAsString(
+        WorkLogSavedEvent(workLogId.toString(), userId.toString(), logDate.toString())
+    )
+    kafkaTemplate.send(TOPIC_WORK_LOG_SAVED, userId.toString(), payload)
+        .whenComplete { _, ex ->
+            if (ex != null) log.error("Kafka 발행 실패: {}", ex.message)
+        }
+}
+```
+
+`userId`를 Kafka 파티션 키로 사용해서 같은 유저의 이벤트는 항상 같은 파티션으로 가도록 했다. AI 서버에서 유저별 순서 보장이 필요하기 때문이다.
+
+### 5) 스트릭 계산 로직
+
+GitHub 잔디처럼 연속 작성일을 추적한다. **현재 스트릭**(오늘부터 연속)과 **최장 스트릭**(역대 최장)을 각각 계산한다.
+
+```kotlin
+private fun calculateStreaks(dates: Set<LocalDate>, today: LocalDate): Pair<Int, Int> {
+    // 현재 스트릭: 오늘부터 하루씩 거슬러 올라가며 카운트
+    var currentStreak = 0
+    var check = today
+    while (dateSet.contains(check)) {
+        currentStreak++
+        check = check.minusDays(1)
+    }
+
+    // 최장 스트릭: 정렬 후 연속 여부 판단
+    var longestStreak = 0
+    var streak = 1
+    val sorted = dates.sortedDescending()
+    for (i in 1 until sorted.size) {
+        if (sorted[i - 1].minusDays(1) == sorted[i]) {
+            streak++
+            longestStreak = maxOf(longestStreak, streak)
+        } else {
+            streak = 1
+        }
+    }
+    return Pair(currentStreak, longestStreak)
+}
+```
+
+### 6) Redis 캐싱 — 대시보드 5분 TTL
+
+대시보드는 매 요청마다 DB를 여러 번 조회한다. 총 로그 수, 날짜 범위 조회, 회고 목록까지 쿼리가 4~5개 나간다. Redis로 5분 캐싱을 적용해 부하를 줄였다.
+
+```kotlin
+@Cacheable(cacheNames = [CacheConfig.DASHBOARD], key = "#userId")
+fun getDashboard(userId: UUID): DashboardResponse { ... }
+```
+
+캐시 직렬화는 `GenericJackson2JsonRedisSerializer`를 사용했다. 기본 JDK 직렬화는 타입 정보가 묶여서 클래스 변경 시 역직렬화가 깨지는 문제가 있다.
+
+---
+
+## 트러블슈팅 / 고민 포인트
+
+### gradle-wrapper.jar CI 오류
+
+- **원인**: `.gitignore`의 `*.jar` 규칙이 `gradle-wrapper.jar`도 제외시켜 CI 환경에서 파일이 없었음
+- **해결**: `!apps/api/gradle/wrapper/gradle-wrapper.jar` 예외 규칙 추가 후 `git add -f`로 강제 커밋
+
+### CI 테스트 환경 — DB/Kafka 연결 없이 통과시키기
+
+- **원인**: `@SpringBootTest`가 전체 컨텍스트를 로드하면서 PostgreSQL/Kafka에 실제 연결 시도
+- **해결 1차**: `application-test.yml`에 DataSource/JPA/Flyway/Kafka AutoConfiguration 제외
+- **해결 2차**: `JwtProperties` 바인딩 실패로 `SecurityConfig → JwtAuthenticationFilter` Bean 생성 실패 → `application-test.yml`에 `jwt.secret` 추가
+- **해결 3차**: 그래도 남는 의존성 체인 문제 → `contextLoads`에서 `@SpringBootTest` 자체를 제거. 실제 컨텍스트 통합 테스트는 이후 Testcontainers로 진행 예정
+
+### Mockito UnnecessaryStubbingException
+
+- **원인**: `signup()`은 `refreshTokenRepository.save()`를 호출하지 않는데 stubbing을 설정함
+- **해결**: 해당 케이스의 불필요한 stubbing 제거
+
+---
+
+## 결과
+
+| 이슈 | 내용 | PR |
+|------|------|-----|
+| #20 | Kotlin Spring Boot 프로젝트 세팅 (Gradle 8.7 + Kotlin 2.0 + Spring Boot 3.3) | #26 |
+| #21 | 유저 인증 API (JWT + Refresh Token Rotation) | #27 |
+| #22 | 작업 로그 CRUD + Kafka 이벤트 발행 + 주간 통계 | #28 |
+| #23 | 태그 API (생성/조회/삭제) | #29 |
+| #24 | 회고 API (조회/수정/발행) | #30 |
+| #25 | 대시보드 API (스트릭 계산 + Redis 5분 캐싱) | #31 |
+
+- Flyway 마이그레이션 V1(초기 스키마), V2(refresh_tokens) 작성
+- JUnit 단위 테스트 총 29개 케이스 작성 (Mockito 기반)
+- Phase 2 이슈 6개 전부 완료
+
+---
+
+## 다음 개선 아이디어
+
+- Phase 3: Python FastAPI AI 서버 세팅
+- LangGraph 기반 주간 회고 Agent 구현
+- Celery Beat 스케줄러로 자동 회고 생성
+- Testcontainers 통합 테스트 추가 (PostgreSQL + Redis + Kafka)

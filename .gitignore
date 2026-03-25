@@ -146,4 +146,4 @@ coverage/
 *.orig
 .turbo
 
-docs/devlog
+# docs/devlog  ← 개발일지는 커밋 대상
