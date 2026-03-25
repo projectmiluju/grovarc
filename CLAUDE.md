@@ -138,11 +138,12 @@
 
 ```
 현재 Phase: 2 (진행 중)
-마지막 작업: #23 태그 API (PR #29)
-  - TagService: 목록 조회 / 생성 (중복 검사) / 삭제
-  - TagController: GET /POST /DELETE /api/v1/tags
-  - JUnit: TagServiceTest (5케이스)
-다음 할 일: #24 회고 API
+마지막 작업: #24 회고 API (PR #30)
+  - Retrospective 엔티티 (DRAFT/PUBLISHED 상태)
+  - RetrospectiveService: 목록/단건 조회, 수정, 발행
+  - RetrospectiveController: GET/PUT /retrospectives, POST /{id}/publish
+  - JUnit: RetrospectiveServiceTest (5케이스)
+다음 할 일: #25 대시보드 API
 블로커: -
 ```
 
