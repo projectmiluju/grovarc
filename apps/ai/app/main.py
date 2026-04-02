@@ -5,13 +5,16 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.database import connect_all, disconnect_all
+from app.kafka.consumer import start_consumer, stop_consumer
 from app.routers import health
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await connect_all()
+    await start_consumer()
     yield
+    await stop_consumer()
     await disconnect_all()
 
 
