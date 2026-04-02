@@ -3,8 +3,8 @@ FROM python:3.12-slim AS builder
 WORKDIR /app
 
 RUN pip install uv
-COPY requirements.txt ./
-RUN uv pip install --system --no-cache -r requirements.txt
+COPY pyproject.toml ./
+RUN uv pip install --system --no-cache .
 
 # ---- runner ----
 FROM python:3.12-slim AS runner
