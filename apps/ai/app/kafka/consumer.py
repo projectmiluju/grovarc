@@ -1,13 +1,16 @@
 import asyncio
 import json
 import logging
+import uuid
 
 from aiokafka import AIOKafkaConsumer
 from aiokafka.errors import KafkaConnectionError
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from app.core.config import settings
+from app.core.database import AsyncSessionLocal
 from app.kafka.schemas import WorkLogSavedEvent
+from app.services.embedding_service import embed_work_log
 
 logger = logging.getLogger(__name__)
 
@@ -18,15 +21,15 @@ _consumer_task: asyncio.Task | None = None
 
 
 async def _handle_work_log_saved(event: WorkLogSavedEvent) -> None:
-    """work-log.saved 이벤트 처리 — AI 분석 트리거"""
+    """work-log.saved 이벤트 처리 — 임베딩 생성"""
     logger.info(
         "WorkLog 수신 workLogId=%s userId=%s logDate=%s",
         event.workLogId,
         event.userId,
         event.logDate,
     )
-    # TODO: AI 분석 서비스 호출 (Phase 3 이후 태스크에서 구현)
-    # await analysis_service.trigger(event)
+    async with AsyncSessionLocal() as db:
+        await embed_work_log(uuid.UUID(event.workLogId), db)
 
 
 async def _consume_loop(consumer: AIOKafkaConsumer) -> None:
