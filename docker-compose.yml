@@ -112,14 +112,34 @@ services:
   #       condition: service_healthy
   #     mongodb:
   #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
   #     kafka:
   #       condition: service_healthy
   #   ports:
   #     - "8000:8000"
-  #   environment:
-  #     DATABASE_URL: postgresql://grovarc:grovarc@postgres:5432/grovarc
-  #     MONGODB_URL: mongodb://grovarc:grovarc@mongodb:27017/grovarc
-  #     KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+  #   env_file: ./apps/ai/.env
+
+  # celery-worker:
+  #   build: ./apps/ai
+  #   container_name: grovarc-celery-worker
+  #   command: celery -A app.worker.celery_app worker --loglevel=info --concurrency=2
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #     postgres:
+  #       condition: service_healthy
+  #     mongodb:
+  #       condition: service_healthy
+  #   env_file: ./apps/ai/.env
+
+  # celery-beat:
+  #   build: ./apps/ai
+  #   container_name: grovarc-celery-beat
+  #   command: celery -A app.worker.celery_app beat --loglevel=info
+  #   depends_on:
+  #     - celery-worker
+  #   env_file: ./apps/ai/.env
 
   # web:
   #   build: ./apps/web
