@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import connect_all, disconnect_all
 from app.kafka.consumer import start_consumer, stop_consumer
-from app.routers import health
+from app.routers import agent, health
 
 
 @asynccontextmanager
@@ -36,3 +36,4 @@ app.add_middleware(
 )
 
 app.include_router(health.router)
+app.include_router(agent.router)
