@@ -20,6 +20,6 @@ COPY --from=builder --chown=mcp:mcp /app/node_modules ./node_modules
 COPY --from=builder --chown=mcp:mcp /app/package.json ./
 
 USER mcp
-EXPOSE 3001
 
-CMD ["bun", "run", "dist/index.js"]
+# stdio transport 사용 — 포트 불필요
+CMD ["node", "dist/index.js"]
