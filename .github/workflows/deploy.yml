@@ -1,0 +1,162 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  AWS_REGION: ap-northeast-2
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com
+
+jobs:
+  # ── web 빌드 & ECR 푸시 ────────────────────────────────────────────────────
+  deploy-web:
+    name: Deploy Web
+    runs-on: ubuntu-latest
+    if: ${{ hashFiles('apps/web/**') != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & push web image
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/web
+          push: true
+          tags: ${{ env.ECR_REGISTRY }}/grovarc-web:${{ github.sha }},${{ env.ECR_REGISTRY }}/grovarc-web:latest
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to EKS
+        uses: azure/k8s-deploy@v5
+        with:
+          action: deploy
+          manifests: |
+            infra/k8s/deployments/web-deployment.yaml
+            infra/k8s/services/web-service.yaml
+          images: ${{ env.ECR_REGISTRY }}/grovarc-web:${{ github.sha }}
+          namespace: grovarc
+
+  # ── api 빌드 & ECR 푸시 ────────────────────────────────────────────────────
+  deploy-api:
+    name: Deploy API
+    runs-on: ubuntu-latest
+    if: ${{ hashFiles('apps/api/**') != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & push api image
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/api
+          push: true
+          tags: ${{ env.ECR_REGISTRY }}/grovarc-api:${{ github.sha }},${{ env.ECR_REGISTRY }}/grovarc-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to EKS
+        uses: azure/k8s-deploy@v5
+        with:
+          action: deploy
+          manifests: |
+            infra/k8s/deployments/api-deployment.yaml
+            infra/k8s/services/api-service.yaml
+          images: ${{ env.ECR_REGISTRY }}/grovarc-api:${{ github.sha }}
+          namespace: grovarc
+
+  # ── ai 빌드 & ECR 푸시 ────────────────────────────────────────────────────
+  deploy-ai:
+    name: Deploy AI
+    runs-on: ubuntu-latest
+    if: ${{ hashFiles('apps/ai/**') != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & push ai image
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/ai
+          push: true
+          tags: ${{ env.ECR_REGISTRY }}/grovarc-ai:${{ github.sha }},${{ env.ECR_REGISTRY }}/grovarc-ai:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to EKS
+        uses: azure/k8s-deploy@v5
+        with:
+          action: deploy
+          manifests: |
+            infra/k8s/deployments/ai-deployment.yaml
+            infra/k8s/services/ai-service.yaml
+          images: ${{ env.ECR_REGISTRY }}/grovarc-ai:${{ github.sha }}
+          namespace: grovarc
+
+  # ── mcp 빌드 & ECR 푸시 ───────────────────────────────────────────────────
+  deploy-mcp:
+    name: Deploy MCP
+    runs-on: ubuntu-latest
+    if: ${{ hashFiles('apps/mcp/**') != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & push mcp image
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/mcp
+          push: true
+          tags: ${{ env.ECR_REGISTRY }}/grovarc-mcp:${{ github.sha }},${{ env.ECR_REGISTRY }}/grovarc-mcp:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to EKS
+        uses: azure/k8s-deploy@v5
+        with:
+          action: deploy
+          manifests: |
+            infra/k8s/deployments/mcp-deployment.yaml
+            infra/k8s/services/mcp-service.yaml
+          images: ${{ env.ECR_REGISTRY }}/grovarc-mcp:${{ github.sha }}
+          namespace: grovarc
