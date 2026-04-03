@@ -1,7 +1,8 @@
 # Grovarc PRD
-> 작성일: 2026-03-14
-> 작성자: 정원용
-> 상태: 초안
+> 작성일: 2026-03-14  
+> 최종 업데이트: 2026-04-03  
+> 작성자: 정원용  
+> 상태: **완성 (Phase 7 기준)**
 
 ---
 
@@ -53,29 +54,32 @@
 
 ## 4. 기능 목록 (MoSCoW)
 
-### Must Have (MVP 필수)
-| 기능 | 설명 |
-|------|------|
-| 작업 로그 입력 | 오늘 한 일, 막혔던 것, 해결한 것 기록 |
-| AI 주간 회고 자동 생성 | 로그 기반 회고 초안 자동 작성 |
-| 기술 성장 시각화 차트 | 어떤 기술을 얼마나 다뤘는지 차트 |
+### Must Have — 구현 완료 ✅
+| 기능 | 설명 | 구현 |
+|------|------|------|
+| 작업 로그 입력 | 날짜·기분·태그와 함께 하루 작업 기록 | Phase 5 |
+| AI 주간 회고 자동 생성 | Celery Beat + LangGraph로 매주 월요일 회고 초안 자동 작성 | Phase 3 |
+| 성장 코칭 Agent | 최근 3개월 로그 분석 → 부족 기술 스택 → 8주 로드맵 | Phase 3 |
+| 스트릭 & 통계 대시보드 | 연속 작성일, 주간 차트 시각화 | Phase 5 |
+| 인증 (회원가입/로그인) | JWT + Refresh Token, 자동 갱신 | Phase 5 |
 
-### Should Have (MVP 이후)
-| 기능 | 설명 |
-|------|------|
-| 유사 패턴 검색 (RAG) | "이전에 비슷한 문제 어떻게 해결했지?" 검색 |
-| 성장 코칭 Agent | 부족한 기술 스택 분석 + 학습 로드맵 제안 |
+### Should Have — 구현 완료 ✅
+| 기능 | 설명 | 구현 |
+|------|------|------|
+| RAG 기반 유사 패턴 검색 | pgvector로 과거 로그에서 유사 맥락 검색 | Phase 3 |
+| Fine-tuned 모델 A/B | LLaMA 3 + LoRA / Claude API 전환 가능 | Phase 4 |
+| MCP 서버 | Cursor / Claude Code / Codex CLI / Gemini CLI 연동 | Phase 6 |
 
-### Could Have (런칭 후)
+### Could Have — 런칭 후
 | 기능 | 설명 |
 |------|------|
 | 월간 리포트 공유 | 월간 성장 리포트를 링크로 공유 |
-| MCP 서버 | Cursor/Claude에서 직접 회고 데이터 조회 |
+| 팀 대시보드 | 팀 단위 성장 현황 집계 |
 
-### Won't Have (이번 버전)
-- 팀 협업 기능
+### Won't Have — 이번 버전
 - 소셜 피드 (다른 개발자 로그 구경)
 - 모바일 앱
+- 실시간 협업
 
 ---
 
@@ -85,21 +89,23 @@
 ```
 1. 회원가입 / 로그인
 2. 오늘의 작업 로그 입력
-   - 오늘 한 일
-   - 사용한 기술 스택
-   - 막혔던 것
-   - 해결한 것
-   - 내일 할 것
+   - 날짜, 제목, 본문
+   - 기분 (😊 GREAT ~ 😩 TERRIBLE)
+   - 기술 태그
 3. 주간 회고 자동 생성 (매주 월요일 AI가 자동 생성)
-4. 회고 확인 및 수정
-5. 기술 성장 차트 확인
+4. 회고 확인 및 수정 → 발행
+5. 성장 코칭 요청 → 8주 학습 로드맵 확인
+6. 대시보드에서 스트릭 & 통계 확인
 ```
 
 ### 유저 스토리 상세
-- 개발자로서, 오늘 한 일을 빠르게 기록하고 싶다 → 로그 입력 UI는 최대한 단순하게
-- 개발자로서, 매주 회고를 자동으로 받고 싶다 → AI가 월요일 아침에 자동 생성
-- 개발자로서, 내가 어떤 기술을 얼마나 썼는지 보고 싶다 → 기술 스택 차트
-- 개발자로서, 예전에 비슷한 문제를 어떻게 해결했는지 찾고 싶다 → RAG 검색
+| As a... | I want to... | So that... |
+|---------|--------------|------------|
+| 개발자 | 오늘 한 일을 빠르게 기록하고 싶다 | 나중에 회고할 때 맥락을 잃지 않을 수 있다 |
+| 개발자 | 매주 회고를 자동으로 받고 싶다 | 직접 쓰는 부담 없이 회고를 유지할 수 있다 |
+| 개발자 | 부족한 기술 스택을 파악하고 싶다 | 다음에 무엇을 공부할지 방향을 잡을 수 있다 |
+| 개발자 | AI CLI에서 내 회고 데이터를 조회하고 싶다 | 개발 중 컨텍스트로 바로 활용할 수 있다 |
+| 개발자 | 스트릭과 통계를 보고 싶다 | 성장하고 있다는 체감을 얻을 수 있다 |
 
 ---
 
@@ -112,29 +118,29 @@
 
 ---
 
-## 7. 기술 스택 요약
+## 7. 기술 스택
 
 | 영역 | 기술 |
 |------|------|
-| Frontend | Next.js, TypeScript, TailwindCSS, Zustand |
-| Backend | Kotlin, Spring Boot, Kafka, JUnit |
-| AI | Python, FastAPI, LangGraph, LLaMA 3, RAG |
-| MCP | TypeScript MCP SDK |
-| Infra | Kubernetes, Terraform, Prometheus, Grafana |
+| Frontend | Next.js 16, React 19, TypeScript, TailwindCSS, Zustand, Playwright |
+| Backend | Kotlin, Spring Boot, JPA, Spring Security + JWT, Kafka |
+| AI | Python, FastAPI, LangGraph, Celery + Beat, LLaMA 3 + LoRA, pgvector + RAG |
+| MCP | TypeScript, @modelcontextprotocol/sdk, stdio transport |
 | DB | PostgreSQL + pgvector, Redis, MongoDB |
+| Infra | Kubernetes (EKS), Terraform, Docker, Prometheus + Grafana, GitHub Actions |
 
 ---
 
-## 8. 마일스톤
+## 8. 마일스톤 (실제 완료 기준)
 
-| Phase | 내용 | 목표 시점 |
-|-------|------|-----------|
-| Phase 0 | 기획 & 설계 | Week 1 |
-| Phase 1 | 인프라 & 환경 세팅 | Week 2 |
-| Phase 2 | 백엔드 코어 | Week 3 |
-| Phase 3 | AI 서버 코어 | Week 4~5 |
-| Phase 4 | Fine-tuning | Week 5 |
-| Phase 5 | 프론트엔드 | Week 6 |
-| Phase 6 | MCP 서버 | Week 6 |
-| Phase 7 | PM 산출물 & 블로그 | Week 7 |
-| Phase 8 | QA & 런칭 | Week 8 |
+| Phase | 내용 | 상태 |
+|-------|------|------|
+| Phase 0 | 기획 & 설계 | 🔲 |
+| Phase 1 | 인프라 & 환경 세팅 | 🔲 |
+| Phase 2 | 백엔드 코어 (Kotlin Spring Boot, CRUD, Kafka) | ✅ 완료 |
+| Phase 3 | AI 서버 코어 (FastAPI, LangGraph, RAG, Celery) | ✅ 완료 |
+| Phase 4 | Fine-tuning (LLaMA 3 + LoRA, HuggingFace Hub) | ✅ 완료 |
+| Phase 5 | 프론트엔드 (Next.js 16, React 19, Playwright) | ✅ 완료 |
+| Phase 6 | MCP 서버 (Cursor / Claude Code / Codex CLI / Gemini CLI) | ✅ 완료 |
+| Phase 7 | PM 산출물 & 블로그 | 🔄 진행 중 |
+| Phase 8 | QA & 런칭 | 🔲 |
