@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from app.agents.coaching.graph import run_coaching_agent
 from app.agents.retrospective.graph import run_retrospective_agent
 
 router = APIRouter(prefix="/agents", tags=["agents"])
@@ -30,5 +31,25 @@ async def trigger_retrospective_agent(body: RetrospectiveRequest):
         draft_title=result["draft_title"],
         draft_content=result["draft_content"],
         goals=result["goals"],
+        mongo_doc_id=result.get("mongo_doc_id"),
+    )
+
+
+class CoachingRequest(BaseModel):
+    user_id: str
+
+
+class CoachingResponse(BaseModel):
+    weak_stacks: list[str]
+    roadmap: str
+    mongo_doc_id: str | None
+
+
+@router.post("/coaching", response_model=CoachingResponse)
+async def trigger_coaching_agent(body: CoachingRequest):
+    result = await run_coaching_agent(user_id=body.user_id)
+    return CoachingResponse(
+        weak_stacks=result["weak_stacks"],
+        roadmap=result["roadmap"],
         mongo_doc_id=result.get("mongo_doc_id"),
     )
