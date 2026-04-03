@@ -1,0 +1,126 @@
+---
+title: "Grovarc 개발기 #5 — Phase 3 완료: 성장 코칭 Agent + Phase 4 Fine-tuning 데이터셋 준비"
+date: 2026-04-03
+summary: "LangGraph 성장 코칭 Agent(DuckDuckGo 웹 검색 연동)로 Phase 3를 마무리하고, Fine-tuning용 학습 데이터 파이프라인(실제 DB 추출 + Claude Haiku 합성 생성)으로 Phase 4를 시작했다."
+tags: ["Grovarc", "LangGraph", "DuckDuckGo", "FineTuning", "LLaMA3", "ChatML", "Phase3", "Phase4"]
+category: "til"
+series: "Grovarc 개발기"
+---
+
+# Grovarc 개발기 #5 — Phase 3 완료: 성장 코칭 Agent + Phase 4 Fine-tuning 데이터셋 준비
+
+Phase 3의 마지막 남은 태스크인 성장 코칭 Agent를 완성하면서 AI 서버 코어를 마무리했다. 이어서 Phase 4(Fine-tuning)의 첫 단계로, LLaMA 3 학습에 쓸 데이터셋 파이프라인을 구축했다. 하루에 Phase 하나를 완료하고 다음 Phase의 첫 이슈까지 끝낸 셈이다.
+
+---
+
+## 목표
+
+- LangGraph 성장 코칭 Agent 구현 (RAG + 웹 검색 + 개인화 로드맵)
+- Fine-tuning 학습 데이터 포맷 설계 및 파이프라인 구축
+- GitHub Project 정리 (중복 이슈 제거, Phase 3 에픽 Done 처리)
+
+---
+
+## 핵심 구현 포인트
+
+### 1) 성장 코칭 Agent — 5노드 LangGraph
+
+주간 회고 Agent가 "지난주를 돌아보는 것"이라면, 코칭 Agent는 "앞으로 어떻게 성장할지"를 답해준다. 최근 3개월 로그를 분석해서 부족한 스택을 파악하고, 웹 검색으로 리소스를 찾아 8주 로드맵을 생성한다.
+
+```python
+graph.add_edge(START, "collect_recent_logs")   # 최근 90일 WorkLog 수집
+graph.add_edge("collect_recent_logs", "analyze_weak_stacks")  # RAG + LLM → 부족 스택 3~5개
+graph.add_edge("analyze_weak_stacks", "search_resources")      # DuckDuckGo 스택별 검색
+graph.add_edge("search_resources", "generate_roadmap")         # LLM → 8주 개인화 로드맵
+graph.add_edge("generate_roadmap", "save_to_mongo")            # MongoDB 저장
+graph.add_edge("save_to_mongo", END)
+```
+
+### 2) DuckDuckGo 웹 검색 연동
+
+학습 리소스 검색에는 `langchain_community`의 `DuckDuckGoSearchRun`을 사용했다. Tavily는 API 키가 필요하고, SerpAPI는 유료다. DuckDuckGo는 키 없이 바로 쓸 수 있어서 선택했다.
+
+```python
+from langchain_community.tools import DuckDuckGoSearchRun
+
+async def search_resources(state: CoachingState) -> CoachingState:
+    search = DuckDuckGoSearchRun()
+    for stack in state["weak_stacks"]:
+        query = f"{stack} 학습 로드맵 튜토리얼 추천 2024 2025"
+        result = search.run(query)
+        search_results[stack] = result[:800]  # 토큰 절약
+```
+
+스택별로 검색하고, 결과를 800자로 잘라 LLM 프롬프트에 넣는다. 토큰 절약이 목적이다.
+
+### 3) Fine-tuning 데이터 포맷 — ChatML messages 형식
+
+LLaMA 3는 ChatML 형식을 기본으로 사용한다. instruction-input-output의 Alpaca 형식보다 시스템 프롬프트를 명확히 분리할 수 있어서 ChatML로 결정했다.
+
+```python
+@dataclass
+class TrainingSample:
+    messages: list[Message]  # system / user / assistant
+    source: str              # "real" | "synthetic"
+
+# 학습 샘플 예시
+{
+  "messages": [
+    {"role": "system", "content": "당신은 개발자의 성장을 돕는 AI 코치입니다..."},
+    {"role": "user", "content": "## 이번 주 작업 로그 (2026-03-28 ~ 2026-04-03)\n..."},
+    {"role": "assistant", "content": "## 이번 주 회고\n..."}
+  ],
+  "source": "real"
+}
+```
+
+### 4) 합성 데이터 생성 — Claude Haiku 활용
+
+실제 DB에 회고 데이터가 충분히 쌓이지 않은 초기 단계라 합성 데이터가 필요하다. 고가의 Sonnet 대신 Haiku를 써서 100개 기준 API 비용을 크게 줄였다. 5가지 개발자 페르소나(백엔드, 프론트, 풀스택, AI/ML, DevOps)와 다양한 기술 스택 조합으로 다양성을 확보한다.
+
+```python
+_PERSONAS = [
+    {"role": "백엔드 개발자", "stacks": ["Spring Boot", "Kotlin", "PostgreSQL", ...]},
+    {"role": "AI/ML 엔지니어", "stacks": ["PyTorch", "LangChain", "HuggingFace", ...]},
+    ...
+]
+
+# 동시성 제어로 Rate Limit 방지
+semaphore = asyncio.Semaphore(concurrency)  # 기본 5개 동시 요청
+```
+
+### 5) 데이터 파이프라인 전체 흐름
+
+```
+prepare_dataset.py   →  real.jsonl      (DB WorkLog+Retrospective 페어)
+generate_synthetic.py → synthetic.jsonl  (Claude Haiku 합성 데이터)
+                          ↓
+                     build_dataset.py
+                     ├── 품질 검증 (assistant 200자 미만 제거)
+                     ├── 중복 제거 (assistant 앞 100자 기준)
+                     └── train/val 분리 (기본 9:1)
+                          ↓
+               train.jsonl / val.jsonl  ← LLaMA 3 학습 입력
+```
+
+---
+
+## 결과
+
+| PR | 내용 |
+|----|------|
+| #47 | 성장 코칭 Agent (LangGraph 5노드 + DuckDuckGo + MongoDB) |
+| #52 | Fine-tuning 데이터셋 준비 (schema + prepare + generate + build) |
+
+- Phase 3 AI 서버 코어 전체 완료 (이슈 6개)
+- Phase 4 첫 번째 태스크(#48) 완료
+- GitHub Project 정리: 중복 이슈 4개 제거, Phase 3 에픽 Done 처리
+- pytest 총 20개 케이스 추가 (코칭 Agent 8개 + 데이터셋 12개)
+
+---
+
+## 다음 개선 아이디어
+
+- #49 LLaMA 3 8B + QLoRA Fine-tuning (Google Colab T4 GPU)
+- 합성 데이터 품질 향상: 더 다양한 페르소나와 시나리오 추가
+- Fine-tuning 완료 후 Claude vs Fine-tuned 모델 품질 비교

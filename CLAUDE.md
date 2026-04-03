@@ -125,7 +125,7 @@
 - [ ] **Phase 0** — 기획 & 설계 (PRD, 유저 스토리, 아키텍처 설계, GitHub 세팅, Kotlin 문법)
 - [ ] **Phase 1** — 인프라 & 환경 세팅 (Terraform, k8s, Docker, CI/CD, 모니터링)
 - [x] **Phase 2** — 백엔드 코어 (Kotlin Spring Boot, CRUD API, JUnit, Kafka)
-- [ ] **Phase 3** — AI 서버 코어 (FastAPI, LangGraph Agent, RAG, MongoDB, Celery)
+- [x] **Phase 3** — AI 서버 코어 (FastAPI, LangGraph Agent, RAG, MongoDB, Celery)
 - [ ] **Phase 4** — Fine-tuning (학습 데이터 준비, LLaMA 3 + LoRA, Hugging Face Hub)
 - [ ] **Phase 5** — 프론트엔드 (Next.js UI, 대시보드, 시각화, Playwright)
 - [ ] **Phase 6** — MCP 서버 (TypeScript MCP SDK, Cursor 연동)
@@ -137,17 +137,22 @@
 ## 현재 진행 상황
 
 ```
-현재 Phase: 2 (완료) → Phase 3 시작
-마지막 작업: Phase 2 백엔드 코어 전체 완료 (PR #26~#31)
-  - #20 Kotlin Spring Boot 프로젝트 세팅 (Gradle 8.7 + Kotlin 2.0 + Spring Boot 3.3)
-  - #21 유저 인증 API (JWT + Refresh Token Rotation, Spring Security)
-  - #22 작업 로그 CRUD + Kafka 이벤트 발행 + 주간 통계
-  - #23 태그 API (생성/조회/삭제)
-  - #24 회고 API (조회/수정/DRAFT→PUBLISHED 발행)
-  - #25 대시보드 API (스트릭 계산 + Redis 5분 캐싱)
-  - Flyway V1(초기 스키마), V2(refresh_tokens) 마이그레이션
-  - JUnit 단위 테스트 29개 케이스 (Mockito)
-다음 할 일: Phase 3 — AI 서버 코어 (FastAPI, LangGraph Agent, RAG, Celery)
+현재 Phase: 3 (완료) → Phase 4 진행 중
+마지막 작업: Phase 3 AI 서버 코어 전체 완료 + Phase 4 학습 데이터 준비 완료
+  [Phase 3 완료]
+  - #37 FastAPI AI 서버 프로젝트 초기 세팅 (PR #38)
+  - #39 Kafka Consumer 구현 (work-log.saved 이벤트 수신) (PR #40)
+  - #41 RAG 파이프라인 구현 (pgvector + OpenAI 임베딩) (PR #42)
+  - #43 LangGraph 주간 회고 Agent 구현 (PR #44)
+  - #45 Celery + Beat 주간 회고 스케줄러 (PR #46)
+  - #36 LangGraph 성장 코칭 Agent (RAG + DuckDuckGo 웹 검색 + 8주 로드맵) (PR #47)
+  [Phase 4 진행 중]
+  - #48 Fine-tuning 학습 데이터셋 준비 완료 (PR #52)
+    - ChatML 형식 TrainingSample 스키마
+    - prepare_dataset.py (DB → real.jsonl)
+    - generate_synthetic.py (Claude Haiku → synthetic.jsonl)
+    - build_dataset.py (병합 → 품질검증 → train/val 분리)
+다음 할 일: #49 LLaMA 3 + LoRA Fine-tuning (Google Colab)
 블로커: -
 ```
 
