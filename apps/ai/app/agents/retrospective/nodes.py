@@ -11,6 +11,7 @@ from app.agents.retrospective.state import RetrospectiveState, WorkLogItem
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal, get_mongo_db
 from app.models.work_log import WorkLog
+from app.services.model_service import get_model_service
 from app.services.rag_service import build_rag_context
 
 logger = logging.getLogger(__name__)
@@ -92,29 +93,15 @@ async def generate_draft(state: RetrospectiveState) -> RetrospectiveState:
         for log in state["work_logs"]
     )
 
-    system_prompt = """당신은 개발자의 성장을 돕는 AI 코치입니다.
-주어진 작업 로그와 과거 패턴을 바탕으로 진솔하고 통찰력 있는 주간 회고를 작성해주세요.
-회고는 한국어로 작성하며 마크다운 형식을 사용합니다."""
+    model_service = get_model_service()
+    logger.info("회고 초안 생성 backend=%s", model_service.backend_name)
 
-    human_prompt = f"""## 이번 주 작업 로그 ({state['period_from']} ~ {state['period_to']})
-
-{logs_text}
-
-{f"## 과거 유사 패턴{chr(10)}{state['rag_context']}" if state['rag_context'] else ""}
-
-위 내용을 바탕으로 주간 회고를 작성해주세요.
-형식:
-- 제목: 한 줄 요약 (## 제목 형식)
-- 이번 주 한 일
-- 잘한 점
-- 아쉬운 점 & 개선 방향
-- 배운 것
-"""
-
-    response = await _get_llm().ainvoke(
-        [SystemMessage(content=system_prompt), HumanMessage(content=human_prompt)]
+    full_text = await model_service.generate_retrospective_draft(
+        logs_text=logs_text,
+        period_from=state["period_from"],
+        period_to=state["period_to"],
+        rag_context=state.get("rag_context", ""),
     )
-    full_text = response.content
 
     # 첫 번째 줄을 제목으로 추출
     lines = full_text.strip().split("\n")
