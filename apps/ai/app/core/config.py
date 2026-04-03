@@ -42,6 +42,12 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
 
+    # Fine-tuned 모델 추론 설정
+    # "claude" → Anthropic Claude (기본), "finetuned" → HF Fine-tuned 모델
+    INFERENCE_BACKEND: str = "claude"
+    HF_MODEL_ID: str = "projectmiluju/grovarc-llama3-8b"
+    HF_TOKEN: str = ""
+
     # JWT (Spring Boot와 동일한 시크릿 사용)
     JWT_SECRET: str = ""
 
