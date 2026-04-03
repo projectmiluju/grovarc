@@ -120,8 +120,8 @@ claude mcp add grovarc \
 | Phase 4 | Fine-tuning (LLaMA 3 + LoRA) | ✅ |
 | Phase 5 | 프론트엔드 (Next.js 16, Playwright) | ✅ |
 | Phase 6 | MCP 서버 (4개 AI CLI 연동) | ✅ |
-| Phase 7 | PM 산출물 & 블로그 | 🔄 |
-| Phase 8 | QA & 런칭 | 🔲 |
+| Phase 7 | PM 산출물 & 블로그 | ✅ |
+| Phase 8 | QA & 런칭 | ✅ |
 
 ---
 

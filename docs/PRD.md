@@ -142,5 +142,5 @@
 | Phase 4 | Fine-tuning (LLaMA 3 + LoRA, HuggingFace Hub) | ✅ 완료 |
 | Phase 5 | 프론트엔드 (Next.js 16, React 19, Playwright) | ✅ 완료 |
 | Phase 6 | MCP 서버 (Cursor / Claude Code / Codex CLI / Gemini CLI) | ✅ 완료 |
-| Phase 7 | PM 산출물 & 블로그 | 🔄 진행 중 |
-| Phase 8 | QA & 런칭 | 🔲 |
+| Phase 7 | PM 산출물 & 블로그 | ✅ 완료 |
+| Phase 8 | QA & 런칭 | ✅ 완료 |

@@ -130,23 +130,24 @@
 - [x] **Phase 5** — 프론트엔드 (Next.js UI, 대시보드, 시각화, Playwright)
 - [x] **Phase 6** — MCP 서버 (TypeScript MCP SDK, Cursor / Claude Code / Codex CLI / Gemini CLI 연동)
 - [x] **Phase 7** — PM 산출물 & 블로그 (PRD 공개, README, 블로그 시리즈)
-- [ ] **Phase 8** — QA & 런칭 (성능 테스트, 배포, 커뮤니티 공유)
+- [x] **Phase 8** — QA & 런칭 (성능 테스트, 배포, 커뮤니티 공유)
 
 ---
 
 ## 현재 진행 상황
 
 ```
-현재 Phase: 7 (완료) → Phase 8 시작
-마지막 작업: Phase 7 PM 산출물 전체 완료
-  [Phase 7 완료]
-  - #76 프로젝트 루트 README.md 작성 (PR #78)
-    - 기술 스택 표, 아키텍처 다이어그램, 로컬 실행 가이드
-    - 개발 현황 Phase 테이블
-  - #77 PRD 문서 완성 (PR #79)
-    - MoSCoW 구현 완료 항목 반영, 유저 스토리 표, 마일스톤 업데이트
-다음 할 일: Phase 8 — QA & 런칭
-블로커: -
+현재 Phase: 전체 완료 (Phase 2~8)
+마지막 작업: Phase 8 QA & 런칭 완료
+  [Phase 8 완료]
+  - #81 CI/CD 배포 파이프라인 (PR #83)
+    - deploy.yml: main 브랜치 → ECR 빌드/푸시 → EKS 롤링 배포
+    - 4개 서비스 병렬 배포 (web / api / ai / mcp)
+  - #82 k6 성능·부하 테스트 (PR #83)
+    - infra/k6/load-test.js: API 서버 VU 10→100 단계 부하 테스트
+    - infra/k6/ai-test.js: AI 코칭 Agent 응답 시간 측정
+다음 할 일: 실제 AWS 인프라 프로비저닝 후 배포 실행
+블로커: AWS 계정 세팅, EKS 클러스터 프로비저닝 (Phase 1)
 ```
 
 > ✅ 이 섹션을 작업할 때마다 업데이트하세요.
