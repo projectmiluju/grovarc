@@ -129,7 +129,7 @@
 - [x] **Phase 4** — Fine-tuning (학습 데이터 준비, LLaMA 3 + LoRA, Hugging Face Hub)
 - [x] **Phase 5** — 프론트엔드 (Next.js UI, 대시보드, 시각화, Playwright)
 - [x] **Phase 6** — MCP 서버 (TypeScript MCP SDK, Cursor / Claude Code / Codex CLI / Gemini CLI 연동)
-- [ ] **Phase 7** — PM 산출물 & 블로그 (PRD 공개, README, 블로그 시리즈)
+- [x] **Phase 7** — PM 산출물 & 블로그 (PRD 공개, README, 블로그 시리즈)
 - [ ] **Phase 8** — QA & 런칭 (성능 테스트, 배포, 커뮤니티 공유)
 
 ---
@@ -137,18 +137,15 @@
 ## 현재 진행 상황
 
 ```
-현재 Phase: 6 (완료) → Phase 7 준비 중
-마지막 작업: Phase 6 MCP 서버 전체 완료
-  [Phase 6 완료]
-  - #70 MCP 서버 초기 세팅 + 6개 Tool 구현 (PR #73)
-    - StdioServerTransport — Cursor/Claude Code/Codex CLI/Gemini CLI 공통
-    - get_work_logs, get_work_log, get_retrospectives, get_retrospective
-    - get_coaching_result, get_dashboard_stats
-    - vitest 9개 케이스 all pass
-  - #71 MCP Tools — #70에서 함께 구현 완료 (closed)
-  - #72 멀티 클라이언트 연동 가이드 README (PR #74)
-    - Cursor / Claude Code / Codex CLI / Gemini CLI 설정 방법 문서화
-다음 할 일: Phase 7 — PM 산출물 & 블로그
+현재 Phase: 7 (완료) → Phase 8 시작
+마지막 작업: Phase 7 PM 산출물 전체 완료
+  [Phase 7 완료]
+  - #76 프로젝트 루트 README.md 작성 (PR #78)
+    - 기술 스택 표, 아키텍처 다이어그램, 로컬 실행 가이드
+    - 개발 현황 Phase 테이블
+  - #77 PRD 문서 완성 (PR #79)
+    - MoSCoW 구현 완료 항목 반영, 유저 스토리 표, 마일스톤 업데이트
+다음 할 일: Phase 8 — QA & 런칭
 블로커: -
 ```
 
