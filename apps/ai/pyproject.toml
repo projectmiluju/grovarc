@@ -42,6 +42,9 @@ dependencies = [
     # Celery scheduler
     "celery[redis]>=5.4.0",
 
+    # Fine-tuning (Colab 환경에서 설치 — 로컬 선택적 의존성)
+    # transformers, peft, trl, bitsandbytes, accelerate → Colab 노트북에서 직접 설치
+
     # Utils
     "python-jose[cryptography]>=3.3.0",
     "tenacity>=8.5.0",
