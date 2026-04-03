@@ -1,6 +1,6 @@
 # Grovarc 아키텍처
 
-> 최종 업데이트: 2026-04-03 (Phase 5 완료 기준)
+> 최종 업데이트: 2026-04-03 (Phase 6 완료 기준)
 
 ---
 
@@ -89,20 +89,26 @@ proxy.ts: 쿠키 없으면 /login으로 리다이렉트 (서버 사이드 가드
 
 ---
 
-## MCP 서버 (Phase 6)
+## MCP 서버
 
 ```
 AI CLI (Cursor / Claude Code / Codex CLI / Gemini CLI)
-  ↓ stdio transport (MCP 표준 프로토콜)
+  ↕ stdio transport (JSON-RPC, MCP 표준 프로토콜)
 apps/mcp (TypeScript MCP SDK)
-  ↓ HTTP
-apps/api (Kotlin REST API)
-  ↓
+  ↕ HTTP REST API
+apps/api (Kotlin REST API, :8080)
+  ↕
 PostgreSQL + MongoDB
 ```
 
-**제공 예정 도구:**
-- `get_work_logs` — 작업 로그 조회
-- `get_retrospectives` — 회고 목록/상세 조회
-- `get_coaching_result` — 코칭 결과 조회
-- `get_dashboard_stats` — 성장 통계 조회
+**제공 도구 (구현 완료):**
+- `get_work_logs` — 작업 로그 목록 조회 (페이지네이션)
+- `get_work_log` — 특정 작업 로그 상세 조회
+- `get_retrospectives` — 회고 목록 조회 (ALL/DRAFT/PUBLISHED 필터)
+- `get_retrospective` — 특정 회고 전체 내용 조회
+- `get_coaching_result` — 최신 성장 코칭 결과 + 8주 로드맵
+- `get_dashboard_stats` — 스트릭·주간 통계
+
+**환경변수:**
+- `GROVARC_API_URL` — API 서버 주소 (기본: `http://localhost:8080`)
+- `GROVARC_API_TOKEN` — JWT 액세스 토큰

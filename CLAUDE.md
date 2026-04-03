@@ -128,7 +128,7 @@
 - [x] **Phase 3** — AI 서버 코어 (FastAPI, LangGraph Agent, RAG, MongoDB, Celery)
 - [x] **Phase 4** — Fine-tuning (학습 데이터 준비, LLaMA 3 + LoRA, Hugging Face Hub)
 - [x] **Phase 5** — 프론트엔드 (Next.js UI, 대시보드, 시각화, Playwright)
-- [ ] **Phase 6** — MCP 서버 (TypeScript MCP SDK, Cursor / Claude Code / Codex CLI / Gemini CLI 연동)
+- [x] **Phase 6** — MCP 서버 (TypeScript MCP SDK, Cursor / Claude Code / Codex CLI / Gemini CLI 연동)
 - [ ] **Phase 7** — PM 산출물 & 블로그 (PRD 공개, README, 블로그 시리즈)
 - [ ] **Phase 8** — QA & 런칭 (성능 테스트, 배포, 커뮤니티 공유)
 
@@ -137,24 +137,18 @@
 ## 현재 진행 상황
 
 ```
-현재 Phase: 5 (완료) → Phase 6 시작
-마지막 작업: Phase 5 프론트엔드 전체 완료
-  [Phase 4 완료]
-  - #48 Fine-tuning 학습 데이터셋 준비 (PR #52)
-    - ChatML 형식 TrainingSample 스키마
-    - prepare_dataset.py / generate_synthetic.py / build_dataset.py
-  - #49 LLaMA 3 QLoRA Fine-tuning Colab 노트북 (PR #53)
-  - #50 Hugging Face Hub 업로드 스크립트 (PR #54)
-  - #51 AI 서버 Fine-tuned 모델 연동 + INFERENCE_BACKEND A/B 전환 (PR #55)
-  [Phase 5 완료]
-  - #56 Next.js 16 프로젝트 초기 세팅 (PR #63) — 최초 14로 세팅 후 16으로 업그레이드
-  - #57 인증 페이지 구현 (회원가입/로그인/미들웨어) (PR #64)
-  - #58 대시보드 페이지 구현 (스트릭 캘린더, 주간 차트) (PR #65)
-  - #59 작업 로그 페이지 구현 (목록/작성/상세/수정/삭제) (PR #66)
-  - #60 회고 페이지 구현 (탭/AI 초안 모달/상세/발행) (PR #67)
-  - #61 성장 코칭 페이지 구현 (PR #68)
-  - #62 Playwright E2E 테스트 (auth/worklog/retrospective) (PR #69)
-다음 할 일: Phase 6 MCP 서버 (Cursor / Claude Code / Codex CLI / Gemini CLI)
+현재 Phase: 6 (완료) → Phase 7 준비 중
+마지막 작업: Phase 6 MCP 서버 전체 완료
+  [Phase 6 완료]
+  - #70 MCP 서버 초기 세팅 + 6개 Tool 구현 (PR #73)
+    - StdioServerTransport — Cursor/Claude Code/Codex CLI/Gemini CLI 공통
+    - get_work_logs, get_work_log, get_retrospectives, get_retrospective
+    - get_coaching_result, get_dashboard_stats
+    - vitest 9개 케이스 all pass
+  - #71 MCP Tools — #70에서 함께 구현 완료 (closed)
+  - #72 멀티 클라이언트 연동 가이드 README (PR #74)
+    - Cursor / Claude Code / Codex CLI / Gemini CLI 설정 방법 문서화
+다음 할 일: Phase 7 — PM 산출물 & 블로그
 블로커: -
 ```
 
