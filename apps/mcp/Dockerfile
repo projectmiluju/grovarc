@@ -12,8 +12,8 @@ FROM oven/bun:1-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-RUN addgroup --system --gid 1001 mcp && \
-    adduser --system --uid 1001 --ingroup mcp mcp
+RUN groupadd --system --gid 1001 mcp && \
+    useradd --system --uid 1001 --gid mcp mcp
 
 COPY --from=builder --chown=mcp:mcp /app/dist ./dist
 COPY --from=builder --chown=mcp:mcp /app/node_modules ./node_modules
@@ -22,4 +22,4 @@ COPY --from=builder --chown=mcp:mcp /app/package.json ./
 USER mcp
 
 # stdio transport 사용 — 포트 불필요
-CMD ["node", "dist/index.js"]
+CMD ["bun", "run", "dist/index.js"]
