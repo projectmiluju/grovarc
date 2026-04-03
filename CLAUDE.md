@@ -126,9 +126,9 @@
 - [ ] **Phase 1** — 인프라 & 환경 세팅 (Terraform, k8s, Docker, CI/CD, 모니터링)
 - [x] **Phase 2** — 백엔드 코어 (Kotlin Spring Boot, CRUD API, JUnit, Kafka)
 - [x] **Phase 3** — AI 서버 코어 (FastAPI, LangGraph Agent, RAG, MongoDB, Celery)
-- [ ] **Phase 4** — Fine-tuning (학습 데이터 준비, LLaMA 3 + LoRA, Hugging Face Hub)
-- [ ] **Phase 5** — 프론트엔드 (Next.js UI, 대시보드, 시각화, Playwright)
-- [ ] **Phase 6** — MCP 서버 (TypeScript MCP SDK, Cursor 연동)
+- [x] **Phase 4** — Fine-tuning (학습 데이터 준비, LLaMA 3 + LoRA, Hugging Face Hub)
+- [x] **Phase 5** — 프론트엔드 (Next.js UI, 대시보드, 시각화, Playwright)
+- [ ] **Phase 6** — MCP 서버 (TypeScript MCP SDK, Cursor / Claude Code / Codex CLI / Gemini CLI 연동)
 - [ ] **Phase 7** — PM 산출물 & 블로그 (PRD 공개, README, 블로그 시리즈)
 - [ ] **Phase 8** — QA & 런칭 (성능 테스트, 배포, 커뮤니티 공유)
 
@@ -137,22 +137,24 @@
 ## 현재 진행 상황
 
 ```
-현재 Phase: 3 (완료) → Phase 4 진행 중
-마지막 작업: Phase 3 AI 서버 코어 전체 완료 + Phase 4 학습 데이터 준비 완료
-  [Phase 3 완료]
-  - #37 FastAPI AI 서버 프로젝트 초기 세팅 (PR #38)
-  - #39 Kafka Consumer 구현 (work-log.saved 이벤트 수신) (PR #40)
-  - #41 RAG 파이프라인 구현 (pgvector + OpenAI 임베딩) (PR #42)
-  - #43 LangGraph 주간 회고 Agent 구현 (PR #44)
-  - #45 Celery + Beat 주간 회고 스케줄러 (PR #46)
-  - #36 LangGraph 성장 코칭 Agent (RAG + DuckDuckGo 웹 검색 + 8주 로드맵) (PR #47)
-  [Phase 4 진행 중]
-  - #48 Fine-tuning 학습 데이터셋 준비 완료 (PR #52)
+현재 Phase: 5 (완료) → Phase 6 시작
+마지막 작업: Phase 5 프론트엔드 전체 완료
+  [Phase 4 완료]
+  - #48 Fine-tuning 학습 데이터셋 준비 (PR #52)
     - ChatML 형식 TrainingSample 스키마
-    - prepare_dataset.py (DB → real.jsonl)
-    - generate_synthetic.py (Claude Haiku → synthetic.jsonl)
-    - build_dataset.py (병합 → 품질검증 → train/val 분리)
-다음 할 일: #49 LLaMA 3 + LoRA Fine-tuning (Google Colab)
+    - prepare_dataset.py / generate_synthetic.py / build_dataset.py
+  - #49 LLaMA 3 QLoRA Fine-tuning Colab 노트북 (PR #53)
+  - #50 Hugging Face Hub 업로드 스크립트 (PR #54)
+  - #51 AI 서버 Fine-tuned 모델 연동 + INFERENCE_BACKEND A/B 전환 (PR #55)
+  [Phase 5 완료]
+  - #56 Next.js 16 프로젝트 초기 세팅 (PR #63) — 최초 14로 세팅 후 16으로 업그레이드
+  - #57 인증 페이지 구현 (회원가입/로그인/미들웨어) (PR #64)
+  - #58 대시보드 페이지 구현 (스트릭 캘린더, 주간 차트) (PR #65)
+  - #59 작업 로그 페이지 구현 (목록/작성/상세/수정/삭제) (PR #66)
+  - #60 회고 페이지 구현 (탭/AI 초안 모달/상세/발행) (PR #67)
+  - #61 성장 코칭 페이지 구현 (PR #68)
+  - #62 Playwright E2E 테스트 (auth/worklog/retrospective) (PR #69)
+다음 할 일: Phase 6 MCP 서버 (Cursor / Claude Code / Codex CLI / Gemini CLI)
 블로커: -
 ```
 
@@ -177,10 +179,10 @@
 - **이유**: 오픈소스라 비용 없음, Hugging Face 생태계 경험 추가, Google Colab으로 GPU 없이 가능
 - **트레이드오프**: OpenAI API보다 초기 셋업 복잡
 
-### ADR-004 | MCP 서버 직접 구현
-- **결정**: 이 서비스의 MCP 서버를 TypeScript로 직접 구현
-- **이유**: MCP를 쓰는 것이 아니라 MCP 서버 제공자가 되는 것이 포트폴리오 차별점
-- **트레이드오프**: 추가 개발 공수
+### ADR-004 | MCP 서버 직접 구현 + 멀티 클라이언트 지원
+- **결정**: TypeScript MCP SDK로 직접 구현, stdio transport 사용
+- **이유**: MCP를 쓰는 것이 아니라 MCP 서버 제공자가 되는 것이 포트폴리오 차별점. stdio transport는 Cursor / Claude Code / Codex CLI / Gemini CLI 모두 지원하는 가장 범용적인 방식
+- **트레이드오프**: 추가 개발 공수. 각 클라이언트별 설정 파일 위치가 달라 README 문서화 필요
 
 ### ADR-006 | develop 브랜치를 default로 설정
 - **결정**: GitHub default 브랜치를 `main` → `develop`으로 변경
@@ -191,6 +193,12 @@
 - **결정**: 루트 패키지 매니저를 bun으로 채택
 - **이유**: npm/pnpm 대비 설치 속도 빠름, 런타임 내장, 모노레포 워크스페이스 지원
 - **트레이드오프**: 생태계가 npm/pnpm보다 덜 성숙, 일부 패키지 호환 이슈 가능성
+
+### ADR-007 | Next.js 14 → 16 업그레이드
+- **결정**: Phase 5 완료 후 Next.js 16 (React 19, ESLint 9)으로 업그레이드
+- **이유**: 포트폴리오 프로젝트로 최신 버전 사용이 적합. Turbopack 기본화, next/typescript ESLint 정식 지원, React 19 성능 개선
+- **주요 변경**: `middleware.ts` → `proxy.ts`, 함수명 `middleware` → `proxy`, `@typescript-eslint/*` 제거(eslint-config-next@16 내장)
+- **트레이드오프**: React 19 peer dependency 경고 일부 라이브러리에서 발생 (동작에는 문제 없음)
 
 > ✅ 새로운 기술 결정이 생길 때마다 여기에 추가하세요.
 
